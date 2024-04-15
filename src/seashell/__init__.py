@@ -1,6 +1,43 @@
+import logging
 import dataclasses
 import json
+import os
 
+# Initialize logger
+class CustomFormatter(logging.Formatter):
+    """Logging Formatter to add colors"""
+
+    format = "%(message)s"
+    FORMATS = {
+        logging.DEBUG: format,  # White
+        logging.INFO: format,  # Cyan
+        logging.ERROR: format,  # Red
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+# Create a logger object
+logger = logging.getLogger(__name__)
+
+# Configure logger
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(CustomFormatter())
+logger.addHandler(console_handler)
+logger.setLevel(logging.DEBUG)
+
+CYAN = "\033[0;36m"
+GREEN = "\033[0;32m"
+RED = "\033[0;31m"
+BOLD = "\033[1m"
+UNDERLINE = "\033[4m"
+RESET = "\033[0m"
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+data_file_path = os.path.join(dir_path, "data.json")
+print(data_file_path)
 # Initialize command blueprint 
 @dataclasses.dataclass
 class Command:
@@ -8,29 +45,20 @@ class Command:
     command: str
     meta: str
 
-def make_cmd_class(name: str):
-    """Wrapper to generate sub-command classes"""
-    def __init__(self, from_: dict):
-        Command.__init__(self, from_["name"], from_["command"], from_["meta"])
-    return type(name, (Command,), {"__init__": __init__})
 
-# Create sub-command classes
-ReverseShell = make_cmd_class("ReverseShell")
-BindShell = make_cmd_class("BindShell")
-MSFVenom = make_cmd_class("MSFVenom")
-HoaxShell = make_cmd_class("HoaxShell")
 
-with open("data.json", "r") as fd:
+
+with open(data_file_path, "r") as fd:
     data = json.load(fd)
 
 # Populate fields with appropriate sub-command class instancse
-def populate_field(field: str, pclass: object) -> None:
+def populate_field(field: str) -> None:
     for index, cmd in enumerate(data[field]):
-        data[field][index] = pclass(cmd)
-    print(f"[*] Populated the `{field}` field.")
+        data[field][index] = Command(**cmd)
+    logger.info(f"{CYAN}[*]{RESET} Populated {BOLD}`{field}`{RESET} field.")
     return
 
-populate_field("reverse", ReverseShell)
-populate_field("bind", BindShell)
-populate_field("msfvenom", MSFVenom)
-populate_field("hoaxshell", HoaxShell)
+for field in ["reverse", "bind", "msfvenom", "hoaxshell"]:
+    populate_field(field)
+
+print(data["reverse"][0])
