@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(CustomFormatter())
 logger.addHandler(console_handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 CYAN = "\033[0;36m"
 GREEN = "\033[0;32m"
@@ -37,15 +37,12 @@ RESET = "\033[0m"
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data_file_path = os.path.join(dir_path, "data.json")
-print(data_file_path)
 # Initialize command blueprint 
 @dataclasses.dataclass
 class Command:
     name: str
     command: str
     meta: str
-
-
 
 
 with open(data_file_path, "r") as fd:
@@ -55,10 +52,8 @@ with open(data_file_path, "r") as fd:
 def populate_field(field: str) -> None:
     for index, cmd in enumerate(data[field]):
         data[field][index] = Command(**cmd)
-    logger.info(f"{CYAN}[*]{RESET} Populated {BOLD}`{field}`{RESET} field.")
     return
 
 for field in ["reverse", "bind", "msfvenom", "hoaxshell"]:
     populate_field(field)
-
-print(data["reverse"][0])
+logger.debug(f"{CYAN}[*]{RESET} Populated {BOLD}fields{RESET}.")
