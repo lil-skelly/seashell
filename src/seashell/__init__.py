@@ -35,6 +35,12 @@ BOLD = "\033[1m"
 UNDERLINE = "\033[4m"
 RESET = "\033[0m"
 
+# Initialize global scope variables
+USING_OS = None # windows, mac, linux
+ADDRESS = [None, None] # IP, PORT
+PAYLOAD_TYPE = None # reverse, bind, msfvenom, hoaxshell
+FILTERED_DATA = None
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data_file_path = os.path.join(dir_path, "data.json")
 # Initialize command blueprint 
