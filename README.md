@@ -3,7 +3,7 @@ Seashell is a python tool for generating shells on the go!
 It uses the database of [revshells.com](https://revshells.com) and offers the same functionality. Only difference being, it's in your terminal!
 
 # Credits
-I want to thank @0dayCTF and all the contributors of [reverse-shell-generator](https://github.com/0dayCTF/reverse-shell-generator) for making this project possible.
+I want to thank [@0dayCTF](https://github.com/0dayCTF) and all the contributors of [reverse-shell-generator](https://github.com/0dayCTF/reverse-shell-generator) for making this project possible.
 
 # Installation
 Seashell does not use **ANY** external libraries so you can install it in seconds :D
