@@ -8,4 +8,5 @@ if __name__ == "__main__":
         author="lil-skelly",
         license="LICENSE",
         package_dir={"": "src"},
+        include_package_data=True,
     )
