@@ -1,5 +1,6 @@
 import logging
 import dataclasses
+import itertools
 import json
 import os
 
@@ -40,15 +41,17 @@ USING_OS = None # windows, mac, linux
 ADDRESS = [None, None] # IP, PORT
 PAYLOAD_TYPE = None # reverse, bind, msfvenom, hoaxshell
 FILTERED_DATA = None
+PAYLOAD = None # Command
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data_file_path = os.path.join(dir_path, "data.json")
 # Initialize command blueprint 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Command:
     name: str
     command: str
     meta: str
+    id: int = dataclasses.field(default_factory=itertools.count().__next__)
 
 
 with open(data_file_path, "r") as fd:
