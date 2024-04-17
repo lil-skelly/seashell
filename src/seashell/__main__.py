@@ -34,8 +34,15 @@ parser.add_argument(
     "-S",
     help="Filters results for [given] shell type ",
     type=str,
-    choices=["reverse", "bind", "msfvenom", "hoaxshell"],
+    choices=["reverse", "bind", "msfvenom", "hoaxshell", "listeners"],
     default="reverse",
+)
+parser.add_argument(
+    "-P",
+    "--payload",
+    help="metasploit payload to use for listener [msfconsole]",
+    type=str,
+    default="windows/x64/meterpreter/reverse_tcp"
 )
 
 parser.add_argument(
@@ -45,7 +52,7 @@ parser.add_argument(
     action="store_true",
 )
 
-parser.add_argument("term", nargs="?", help="Search term to filter payloads.", type=str)
+parser.add_argument("term", nargs="?", help="Search term to filter payloads (use list to list payloads).", type=str)
 
 args = parser.parse_args()
 
@@ -80,7 +87,7 @@ def handle_prompt_validation(prompts: list[dict]) -> list:
 
 def filter_results() -> None:
     logger.debug(
-        f"{GREEN}[D]{RESET} Filtering results (OS: {GREEN}{BOLD}{seashell.USING_OS}{RESET}, TYPE: {GREEN}{BOLD}{seashell.PAYLOAD_TYPE} shell{RESET})"
+        f"{GREEN}{BOLD}[D]{RESET} Filtering results (OS: {GREEN}{BOLD}{seashell.USING_OS}{RESET}, TYPE: {GREEN}{BOLD}{seashell.PAYLOAD_TYPE} shell{RESET})"
     )
     seashell.FILTERED_DATA = {
         cmd.name: cmd
@@ -89,14 +96,14 @@ def filter_results() -> None:
         )
     }
     if not seashell.FILTERED_DATA:
-        logger.error(f"{BOLD}{RED}[!]{RESET} Could not find any payloads.")
+        logger.error(f"{RED}{BOLD}[!] Could not find any payloads. {RESET}")
     logger.debug(f"{GREEN}[D]{RESET} Done.")
 
 
 def get_payload_matches(keyword: str, keys: dict[str, str]) -> list[str] | None:
     matches = [
         match
-        for token in keyword.lower().split()
+        for token in keyword.split()
         for match in difflib.get_close_matches(token, keys, cutoff=0.4, n=10)
     ]
     if not matches:
@@ -135,25 +142,20 @@ def handle_interactive():
             "default": "linux",
             "check": lambda x: x in ["windows", "linux", "mac"],
         },
-        # "search_prompt": {
-        #     "text":f"{BOLD}[SEARCH]{RESET} ",
-        #     "default":None,
-        #     "check": lambda x: x
-        # }
     }
     # Get listener address
-    seashell.ADDRESS = handle_prompt_validation(
+    addr = handle_prompt_validation(
         [prompts["ip_prompt"], prompts["port_prompt"]]
-    )[0]
+    )
+    seashell.ADDRESS = check_interface(addr[0]), addr[1]
     # Select payload type
     seashell.USING_OS = handle_prompt_validation([prompts["os_prompt"]])[0]
     seashell.PAYLOAD_TYPE = handle_prompt_validation([prompts["payload_prompt"]])[0]
-
     filter_results()
     
     processed_keys = {key.lower(): key for key in seashell.FILTERED_DATA.keys()}
     while True:
-        keyword = input(f"{BOLD}[SEARCH]{RESET} ")
+        keyword = input(f"{BOLD}[SEARCH]{RESET} ").lower()
         if not keyword:
             logger.warning(f"{RED}{BOLD} Provide a valid search query{RESET}")
             continue
@@ -170,6 +172,10 @@ def handle_interactive():
             if not seashell.PAYLOAD:
                 logger.error(f"{RED}{BOLD}[!] Could not find payload with ID {_id}")
                 continue
+        elif keyword == "list":
+            for cmd in seashell.FILTERED_DATA.values():
+                logger.info(
+                    f"{CYAN}{BOLD}[*]{RESET} {cmd.name:<20} {cmd.id}")
         # search for payload
         else:
             matches = get_payload_matches(keyword, processed_keys)
@@ -182,7 +188,7 @@ def handle_interactive():
 def main(args) -> None:
     try:
         logger.info(
-            f"{CYAN}[*]{RESET} Welcome to the {GREEN}{BOLD}sea of shells{RESET}! Happy pwning >:){RESET}"
+            f"{GREEN}{BOLD}[+]{RESET} Welcome to the {GREEN}{BOLD}sea of shells{RESET}! Happy pwning >:){RESET}"
         )
         if args.verbose:
             logger.setLevel("DEBUG")
@@ -190,7 +196,7 @@ def main(args) -> None:
 
         if args.interactive:
             handle_interactive()
-        else:
+        else: # Manual mode
             seashell.USING_OS = args.os
             seashell.PAYLOAD_TYPE = args.shell
 
@@ -201,7 +207,7 @@ def main(args) -> None:
                     exit(1)
                 seashell.ADDRESS[0] = ip
             else:
-                logger.error(f"{BOLD}{RED}[!]{RESET} Missing target IP. Exiting.")
+                logger.error(f"{RED}{BOLD}[!]{RESET} Missing target IP. Exiting.")
             filter_results()
             if args.term:  
                 if re.match(r"\d+$", args.term):
@@ -216,12 +222,30 @@ def main(args) -> None:
                     if not seashell.PAYLOAD:
                         logger.error(f"{RED}{BOLD}[!] Could not find payload with ID {_id}")
                         exit()
+                elif args.term == "list":
+                    for cmd in seashell.FILTERED_DATA.values():
+                        logger.info(f"{CYAN}{BOLD}[*]{RESET} {cmd.name:<20} {cmd.id}")
                 else:
                     processed_keys = {key.lower(): key for key in seashell.FILTERED_DATA.keys()}
                     matches = get_payload_matches(args.term.strip(), processed_keys)
                     if not matches:
                         exit()
-             
+
+        # seashell.PAYLOAD is set
+        if seashell.PAYLOAD:
+            seashell.PAYLOAD.command = seashell.PAYLOAD.command.replace(
+                "{ip}", 
+                seashell.ADDRESS[0]
+                ).replace(
+                    "{port}", 
+                    str(seashell.ADDRESS[1])
+                )
+            seashell.PAYLOAD.command = seashell.PAYLOAD.command.replace(
+                "{payload}",
+                args.payload
+            )
+            logger.info(seashell.PAYLOAD.command)
+
     except KeyboardInterrupt:
         logger.error(f"{RED}{BOLD}[!] Received keyboard interrupt.")
 

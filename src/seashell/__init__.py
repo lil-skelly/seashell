@@ -46,7 +46,7 @@ PAYLOAD = None # Command
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data_file_path = os.path.join(dir_path, "data.json")
 # Initialize command blueprint 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass()
 class Command:
     name: str
     command: str
@@ -63,6 +63,6 @@ def populate_field(field: str) -> None:
         data[field][index] = Command(**cmd)
     return
 
-for field in ["reverse", "bind", "msfvenom", "hoaxshell"]:
+for field in ["reverse", "bind", "msfvenom", "hoaxshell", "listeners"]:
     populate_field(field)
 logger.debug(f"{CYAN}[*]{RESET} Populated {BOLD}fields{RESET}.")

