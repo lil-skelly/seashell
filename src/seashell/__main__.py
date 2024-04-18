@@ -30,13 +30,23 @@ parser.add_argument(
 parser.add_argument("-p", "--port", help="Target port", type=int, default=4444)
 
 parser.add_argument(
-    "-shell",
-    "-S",
-    help="Filters results for [given] shell type ",
+    "--type",
+    "-T",
+    help="Filters results for [given] payload type ",
     type=str,
     choices=["reverse", "bind", "msfvenom", "hoaxshell", "listeners"],
     default="reverse",
 )
+
+parser.add_argument(
+    "--shell",
+    "-S",
+    help="Shell to use",
+    type=str,
+    choices=data["shells"],
+    default="bash",
+)
+
 parser.add_argument(
     "-P",
     "--payload",
@@ -184,6 +194,20 @@ def handle_interactive():
         if seashell.PAYLOAD:
             break
 
+def substitute_payload(payload: Command) -> Command:
+    payload.command = payload.command.replace(
+                "{ip}", 
+                seashell.ADDRESS[0]
+                ).replace(
+                    "{port}", 
+                    str(seashell.ADDRESS[1])
+                ).replace(
+                    "{payload}",
+                    args.payload
+                ).replace(
+                    "{shell}",
+                    args.shell
+                )
 
 def main(args) -> None:
     try:
@@ -198,7 +222,7 @@ def main(args) -> None:
             handle_interactive()
         else: # Manual mode
             seashell.USING_OS = args.os
-            seashell.PAYLOAD_TYPE = args.shell
+            seashell.PAYLOAD_TYPE = args.type
 
             seashell.ADDRESS[1] = args.port
             if args.ip:
@@ -233,17 +257,7 @@ def main(args) -> None:
 
         # seashell.PAYLOAD is set
         if seashell.PAYLOAD:
-            seashell.PAYLOAD.command = seashell.PAYLOAD.command.replace(
-                "{ip}", 
-                seashell.ADDRESS[0]
-                ).replace(
-                    "{port}", 
-                    str(seashell.ADDRESS[1])
-                )
-            seashell.PAYLOAD.command = seashell.PAYLOAD.command.replace(
-                "{payload}",
-                args.payload
-            )
+            substitute_payload(seashell.PAYLOAD)
             logger.info(seashell.PAYLOAD.command)
 
     except KeyboardInterrupt:
