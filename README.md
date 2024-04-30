@@ -2,6 +2,8 @@
 Seashell is a python tool for generating shells on the go!
 It uses the database of [revshells.com](https://revshells.com) and offers the same functionality. Only difference being, it's in your terminal!
 
+[seashell PoC demo](https://github.com/lil-skelly/seashell/assets/80885284/65ed8213-6e54-4a22-b1ad-4bac9afc706c)
+
 # Credits
 I want to thank [@0dayCTF](https://github.com/0dayCTF) and all the contributors of [reverse-shell-generator](https://github.com/0dayCTF/reverse-shell-generator) for making this project possible.
 
@@ -20,7 +22,7 @@ $ cd seashell && python3 -m pip install .
 usage: python3 -m seashell [-h] [--verbose] [-os {windows,mac,linux}] [-ip IP] [-p PORT]
                            [--type {reverse,bind,msfvenom,hoaxshell,listeners}]
                            [--shell {sh,/bin/sh,bash,/bin/bash,cmd,powershell,pwsh,ash,bsh,csh,ksh,zsh,pdksh,tcsh,mksh,dash}]
-                           [-P PAYLOAD] [--interactive]
+                           [-P PAYLOAD] [--interactive] [--output OUTPUT]
                            [term]
 
 Seashell is a CLI 'reverse' shell generator utility. Happy hacking!
@@ -31,7 +33,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --verbose, -V         Sets logging level to [DEBUG]
-  -os {windows,mac,linux}
+  -os {windows,mac,linux}, -o {windows,mac,linux}
                         Filters results for [given] operating system
   -ip IP                Target IP
   -p PORT, --port PORT  Target port
@@ -42,6 +44,8 @@ options:
   -P PAYLOAD, --payload PAYLOAD
                         metasploit payload to use for listener [msfconsole]
   --interactive, -i     Enables interactive mode. Any arguments besides -V will be ignored!
+  --output OUTPUT, -O OUTPUT
+                        Store payload in a file
 ```
 
 Seashell filters your results based on the shell type and OS specified. 
@@ -51,13 +55,15 @@ Use `list` as the search `term` on both manual and interactive mode to get a lis
 If you do not find your desired payloads, it might be because the payload you are looking for is not available for *linux* systems (the default OS used by seashell). ~ Example 3
 
 After finding the ID of the payload you desire to use, you can:
-- Repeat the command and use the ID as a search term if in manual mode
+- Repeat the command and use the ID as the search `term` if in manual mode
 - Type `use ID` if in interactive mode
 
 Seashell will then select the appropriate payload.
 
 - Now you can also list listeners to host your payload. Same way as you would list reverse shell payloads etc.
 
+**NEW**
+If you want to store the generated shell in a file, you can use the `--output/-O` argument in both modes.
 
 ### Special arguments
 - You can specify a *shell* to use (i.e `/bin/bash` or `zsh`) with the `-S/--shell <SHELL>` command line argument.
