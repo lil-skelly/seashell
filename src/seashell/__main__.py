@@ -61,6 +61,12 @@ parser.add_argument(
     help="Enables interactive mode. Any arguments besides -V will be ignored!",
     action="store_true",
 )
+parser.add_argument(
+    "--output",
+    "-O",
+    type=str,
+    help="Store payload to file"
+)
 
 parser.add_argument("term", nargs="?", help="Search term to filter payloads (use list to list payloads).", type=str)
 
@@ -232,6 +238,7 @@ def main(args) -> None:
                 seashell.ADDRESS[0] = ip
             else:
                 logger.error(f"{RED}{BOLD}[!]{RESET} Missing target IP. Exiting.")
+                exit(1)
             filter_results()
             if args.term:  
                 if re.match(r"\d+$", args.term):
@@ -258,7 +265,12 @@ def main(args) -> None:
         # seashell.PAYLOAD is set
         if seashell.PAYLOAD:
             substitute_payload(seashell.PAYLOAD)
-            logger.info(seashell.PAYLOAD.command)
+            if args.output:
+                with open(args.output, "w") as fd:
+                    fd.write(seashell.PAYLOAD.command)
+                    logger.info(f"{GREEN}{BOLD}[+]{RESET} Wrote payload to <{BOLD}{args.output}{RESET}>")
+            else:
+                logger.info(f"{GREEN}{BOLD}[+]{RESET} {seashell.PAYLOAD.name} | {BOLD}IP{RESET}: {GREEN}{BOLD}{seashell.ADDRESS[0]}{RESET} {BOLD}PORT{RESET}: {GREEN}{BOLD}{seashell.ADDRESS[1]}{RESET}\n{seashell.PAYLOAD.command}")
 
     except KeyboardInterrupt:
         logger.error(f"{RED}{BOLD}[!] Received keyboard interrupt.")
