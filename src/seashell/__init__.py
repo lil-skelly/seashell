@@ -37,10 +37,10 @@ UNDERLINE = "\033[4m"
 RESET = "\033[0m"
 
 # Initialize global scope variables
-USING_OS = None # windows, mac, linux
-ADDRESS = [None, None] # IP, PORT
-PAYLOAD_TYPE = None # reverse, bind, msfvenom, hoaxshell
-FILTERED_DATA = None
+USING_OS = str() # windows, mac, linux
+ADDRESS = [str(), int()] # IP, PORT
+PAYLOAD_TYPE = str() # reverse, bind, msfvenom, hoaxshell
+FILTERED_DATA = dict()
 PAYLOAD = None # Command
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
