@@ -174,17 +174,6 @@ def set_payload_from_id(id_: int) -> bool:
         return False
     
     return True
-    # for cmd in seashell.FILTERED_DATA.values():
-    #     if cmd.id == id_:
-    #         seashell.PAYLOAD = cmd
-    #         logger.info(
-    #             f"{GREEN}{BOLD}[+]{RESET} Using <{BOLD}{cmd.name}{RESET}>"
-    #         )
-    #         break
-    # if not seashell.PAYLOAD:
-    #     logger.error(f"{RED}{BOLD}[!]{RESET} Could not find payload with ID {id_}")
-    #     return False
-    
 
 def substitute_payload(payload: Command, args) -> Command:
     """Substitute the given `payload.command` with the values specified in the substitutions map.
