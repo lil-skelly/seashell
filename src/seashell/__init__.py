@@ -20,10 +20,8 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
-# Create a logger object
+# Initialize logger
 logger = logging.getLogger(__name__)
-
-# Configure logger
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(CustomFormatter())
 logger.addHandler(console_handler)
@@ -37,22 +35,22 @@ UNDERLINE = "\033[4m"
 RESET = "\033[0m"
 
 # Initialize global scope variables
-USING_OS = str() # windows, mac, linux
-ADDRESS = [str(), int()] # IP, PORT
-PAYLOAD_TYPE = str() # reverse, bind, msfvenom, hoaxshell
-FILTERED_DATA = dict()
+USING_OS = "" # windows, mac, linux
+ADDRESS = ["", 0] # IP, PORT
+PAYLOAD_TYPE = "" # reverse, bind, msfvenom, hoaxshell
+FILTERED_DATA = {}
 PAYLOAD = None # Command
+ENCODER = "" # base64 / xor encoder for payload
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data_file_path = os.path.join(dir_path, "data.json")
-# Initialize command blueprint 
+
 @dataclasses.dataclass()
 class Command:
     name: str
     command: str
     meta: str
     id: int = dataclasses.field(default_factory=itertools.count().__next__)
-
 
 with open(data_file_path, "r") as fd:
     data = json.load(fd)
@@ -61,8 +59,12 @@ with open(data_file_path, "r") as fd:
 def populate_field(field: str) -> None:
     for index, cmd in enumerate(data[field]):
         data[field][index] = Command(**cmd)
-    return
 
-for field in ["reverse", "bind", "msfvenom", "hoaxshell", "listeners"]:
-    populate_field(field)
+def populate_fields(fields: tuple[str]) -> None:
+    for field in fields:
+        for index, cmd in enumerate(data[field]):
+            data[field][index] = Command(**cmd)
+
+populate_fields(("reverse", "bind", "msfvenom", "hoaxshell", "listeners"))
+# populate_fields(("reverse", "bind", "msfvenom", "hoaxshell", "listeners"))
 logger.debug(f"{CYAN}[*]{RESET} Populated {BOLD}fields{RESET}.")

@@ -2,8 +2,7 @@ from seashell import *
 import seashell
 import seashell.utils as utils
 import argparse
-import socket
-import difflib, re
+import re
 
 parser = argparse.ArgumentParser(
     prog="python3 -m seashell",
@@ -11,9 +10,10 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "--verbose", "-V", 
+    "--verbose",
+    "-V",
     "-v",
-    help="Sets logging level to [DEBUG]", 
+    help="Sets logging level to [DEBUG]",
     action="store_true",
 )
 
@@ -57,7 +57,7 @@ parser.add_argument(
     "--payload",
     help="metasploit payload to use for listener [msfconsole]",
     type=str,
-    default="windows/x64/meterpreter/reverse_tcp"
+    default="windows/x64/meterpreter/reverse_tcp",
 )
 
 parser.add_argument(
@@ -66,14 +66,25 @@ parser.add_argument(
     help="Enables interactive mode. Any arguments besides -V will be ignored!",
     action="store_true",
 )
+
+parser.add_argument("--output", "-O", type=str, help="Store payload to file")
+
 parser.add_argument(
-    "--output",
-    "-O",
+    "--encoder",
+    "-e",
     type=str,
-    help="Store payload to file"
+    choices=("base64", "xor"),
+    help="Encoder to use on payload",
 )
 
-parser.add_argument("term", nargs="?", help="Search term to filter payloads (use list to list payloads).", type=str)
+parser.add_argument("--iterations", "-I", type=int)
+
+parser.add_argument(
+    "term",
+    nargs="?",
+    help="Search term to filter payloads (use list to list payloads).",
+    type=str,
+)
 
 args = parser.parse_args()
 
@@ -83,13 +94,18 @@ def main(args) -> None:
         logger.info(
             f"{GREEN}{BOLD}[+]{RESET} Welcome to the {GREEN}{BOLD}sea of shells{RESET}! Happy pwning >:){RESET}"
         )
+
         if args.verbose:
             logger.setLevel("DEBUG")
             logger.debug(f"{GREEN}[D]{RESET} Enabled {BOLD}verbose mode{RESET} ++")
 
+        if args.encoder:
+            seashell.ENCODER = args.encoder
+            logger.debug(f"{GREEN}[D]{RESET} Using encoder {BOLD}{args.encoder}{RESET}")
+
         if args.interactive:
             utils.handle_interactive()
-        else: # Manual mode
+        else:  # Manual mode
             # Prepare key variables
             seashell.USING_OS = args.os
             seashell.PAYLOAD_TYPE = args.type
@@ -100,23 +116,27 @@ def main(args) -> None:
                 exit(1)
             else:
                 ip = utils.check_interface(args.ip)
-                if not ip: exit(1)
+                if not ip:
+                    exit(1)
                 seashell.ADDRESS[0] = ip
 
-            # Start filtering data 
+            # Start filtering data
             utils.filter_results()
-            if args.term:  
+            if args.term:
                 if re.match(r"\d+$", args.term):
                     id_ = int(args.term)
                     if not utils.set_payload_from_id(id_):
                         exit()
                 elif args.term == "list":
-                    for cmd in seashell.FILTERED_DATA.values():
-                        logger.info(f"{CYAN}{BOLD}[*]{RESET} {cmd.name:<20} {cmd.id}")
+                    utils.list_payloads()
                 else:
-                    processed_keys = {command.name.lower(): command.name for command in seashell.FILTERED_DATA.values()}
-                    # processed_keys = {key.lower(): key for key in seashell.FILTERED_DATA.keys()}
-                    matches = utils.get_payload_matches(args.term.strip(), processed_keys)
+                    processed_keys = {
+                        command.name.lower(): command.name
+                        for command in seashell.FILTERED_DATA.values()
+                    }
+                    matches = utils.get_payload_matches(
+                        args.term.strip(), processed_keys
+                    )
                     if not matches:
                         exit()
 
