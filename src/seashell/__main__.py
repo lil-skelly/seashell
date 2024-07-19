@@ -1,6 +1,6 @@
-from seashell import *
 import seashell
 import seashell.utils as utils
+import seashell.encoders as encoders
 import argparse
 import re
 
@@ -48,7 +48,7 @@ parser.add_argument(
     "-S",
     help="Shell to use",
     type=str,
-    choices=data["shells"],
+    choices=seashell.data["shells"],
     default="bash",
 )
 
@@ -73,11 +73,18 @@ parser.add_argument(
     "--encoder",
     "-e",
     type=str,
-    choices=("base64", "xor"),
-    help="Encoder to use on payload",
+    choices=tuple(encoders.ENCODER_MAP.keys()),
+    help="The encoder to use",
 )
 
-parser.add_argument("--iterations", "-I", type=int)
+parser.add_argument(
+    "--iterations",
+    "-I",
+    type=int,
+    choices=(1, 2, 3, 4, 5),
+    default=1,
+    help="The number of times to encode the payload",
+)
 
 parser.add_argument(
     "term",
@@ -88,21 +95,42 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+def configure_logger(args):
+    seashell.logger.info(
+        f"{seashell.GREEN}{seashell.BOLD}[+]{seashell.RESET} Welcome to the {seashell.GREEN}{seashell.BOLD}sea of shells{seashell.RESET}! Happy pwning >:){seashell.RESET}"
+    )
+    if args.verbose:
+        seashell.logger.setLevel("DEBUG")
+        seashell.logger.debug(f"{seashell.GREEN}[D]{seashell.RESET} Enabled {seashell.BOLD}verbose mode{seashell.RESET} ++")
+
+def handle_payload_search(args):
+    if args.term:
+        if re.match(r"\d+$", args.term):
+            id_ = int(args.term)
+            if not utils.set_payload_from_id(id_):
+                exit()
+        elif args.term == "list":
+            utils.list_payloads()
+        else:
+            processed_keys = {
+                command.name.lower(): command.name
+                for command in seashell.FILTERED_DATA.values()
+            }
+            matches = utils.get_payload_matches(
+                args.term.strip(), processed_keys
+            )
+            if not matches:
+                exit()
 
 def main(args) -> None:
     try:
-        logger.info(
-            f"{GREEN}{BOLD}[+]{RESET} Welcome to the {GREEN}{BOLD}sea of shells{RESET}! Happy pwning >:){RESET}"
-        )
-
-        if args.verbose:
-            logger.setLevel("DEBUG")
-            logger.debug(f"{GREEN}[D]{RESET} Enabled {BOLD}verbose mode{RESET} ++")
-
+        configure_logger(args)
+        if args.output:
+            seashell.OUTPUT_FILE = args.output
+            seashell.logger.debug(f"{seashell.GREEN}[D]{seashell.RESET} Storing payload to file {seashell.BOLD}{args.output}{seashell.RESET}")
         if args.encoder:
             seashell.ENCODER = args.encoder
-            logger.debug(f"{GREEN}[D]{RESET} Using encoder {BOLD}{args.encoder}{RESET}")
-
+            seashell.logger.debug(f"{seashell.GREEN}[D]{seashell.RESET} Using encoder {seashell.BOLD}{args.encoder}{seashell.RESET}")
         if args.interactive:
             utils.handle_interactive()
         else:  # Manual mode
@@ -112,7 +140,7 @@ def main(args) -> None:
 
             seashell.ADDRESS[1] = args.port
             if not args.ip:
-                logger.error(f"{RED}{BOLD}[!]{RESET} Missing target IP. Exiting.")
+                seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} Missing target IP. Exiting.")
                 exit(1)
             else:
                 ip = utils.check_interface(args.ip)
@@ -122,30 +150,14 @@ def main(args) -> None:
 
             # Start filtering data
             utils.filter_results()
-            if args.term:
-                if re.match(r"\d+$", args.term):
-                    id_ = int(args.term)
-                    if not utils.set_payload_from_id(id_):
-                        exit()
-                elif args.term == "list":
-                    utils.list_payloads()
-                else:
-                    processed_keys = {
-                        command.name.lower(): command.name
-                        for command in seashell.FILTERED_DATA.values()
-                    }
-                    matches = utils.get_payload_matches(
-                        args.term.strip(), processed_keys
-                    )
-                    if not matches:
-                        exit()
+            handle_payload_search(args)
 
         # Final step (output payload)
         if seashell.PAYLOAD:
             utils.handle_payload_output(args)
 
     except KeyboardInterrupt:
-        logger.error(f"{RED}{BOLD}[!] Received keyboard interrupt.")
+        seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!] Received keyboard interrupt.")
 
 
 if __name__ == "__main__":

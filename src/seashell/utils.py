@@ -4,6 +4,7 @@ import difflib
 import re
 from . import encoders
 
+
 def check_interface(i: str) -> str:
     """Validate interface name"""
     try:
@@ -18,10 +19,14 @@ def check_interface(i: str) -> str:
             return None
     return i
 
+
 def list_payloads() -> None:
     """List all the payloads in `seashell.FILTERED_DATA` (handles list command)"""
     for cmd in seashell.FILTERED_DATA.values():
-        seashell.logger.info(f"{seashell.CYAN}{seashell.BOLD}[*]{seashell.RESET} {cmd.name:<20} {cmd.id}")
+        seashell.logger.info(
+            f"{seashell.CYAN}{seashell.BOLD}[*]{seashell.RESET} {cmd.name:<20} {cmd.id}"
+        )
+
 
 def handle_prompt_validation(prompts: list[dict]) -> list:
     """Automates the process of validating user input
@@ -44,8 +49,11 @@ def handle_prompt_validation(prompts: list[dict]) -> list:
             if prompt["check"](value):
                 results[key] = value
                 break
-            seashell.logger.error(f"{seashell.RED}Invalid input. Please provide valid data.{seashell.RESET}")
+            seashell.logger.error(
+                f"{seashell.RED}Invalid input. Please provide valid data.{seashell.RESET}"
+            )
     return results
+
 
 def filter_results() -> None:
     """Filter the dictionary of payloads for a specific OS and payload type."""
@@ -60,8 +68,11 @@ def filter_results() -> None:
     }
 
     if not seashell.FILTERED_DATA:
-        seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!] Could not find any payloads. {seashell.RESET}")
+        seashell.logger.error(
+            f"{seashell.RED}{seashell.BOLD}[!] Could not find any payloads. {seashell.RESET}"
+        )
     seashell.logger.debug(f"{seashell.GREEN}[D]{seashell.RESET} Done.")
+
 
 def get_payload_matches(keyword: str, keys: dict[str, str]) -> list[str] | None:
     """Gets possible matches in `keys` using `keyword`
@@ -84,9 +95,11 @@ def get_payload_matches(keyword: str, keys: dict[str, str]) -> list[str] | None:
         for match in difflib.get_close_matches(token, keys, cutoff=0.4, n=10)
     ]
     if not matches:
-        seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} Could not find any payloads.")
+        seashell.logger.error(
+            f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} Could not find any payloads."
+        )
         return None
-    
+
     for _match in matches:
         cmd_iter = filter(
             lambda cmd: cmd.name == keys[_match], seashell.FILTERED_DATA.values()
@@ -95,8 +108,9 @@ def get_payload_matches(keyword: str, keys: dict[str, str]) -> list[str] | None:
         seashell.logger.info(
             f"{seashell.CYAN}{seashell.BOLD}[*]{seashell.RESET} {cmd.name:<20} {seashell.GREEN}{seashell.BOLD}{cmd.id}{seashell.RESET}"
         )
-    
+
     return matches
+
 
 def handle_interactive():
     """Handles the whole interactive mode"""
@@ -131,17 +145,23 @@ def handle_interactive():
     seashell.PAYLOAD_TYPE = results["payload_type"]
 
     filter_results()
-    interactive_loop() 
+    interactive_loop()
+
 
 def interactive_loop():
     """Contains the interactive query loop for the interactive mode"""
-    processed_keys = {command.name.lower(): command.name for command in seashell.FILTERED_DATA.values()}
+    processed_keys = {
+        command.name.lower(): command.name
+        for command in seashell.FILTERED_DATA.values()
+    }
     while True:
         keyword = input(f"{seashell.BOLD}[SEARCH]{seashell.RESET} ").lower()
         if not keyword:
-            seashell.logger.warning(f"{seashell.RED}{seashell.BOLD} Provide a valid search query{seashell.RESET}")
+            seashell.logger.warning(
+                f"{seashell.RED}{seashell.BOLD} Provide a valid search query{seashell.RESET}"
+            )
             continue
-        # set payload (use X) 
+        # set payload (use X)
         if re.match(r"^use \d+$", keyword):
             id_ = int(keyword.split(" ")[1])
             if not set_payload_from_id(id_):
@@ -155,6 +175,7 @@ def interactive_loop():
                 continue
         if seashell.PAYLOAD:
             break
+
 
 def set_payload_from_id(id_: int) -> bool:
     """Assistance function used to encapsulate the searching logic and remove duplicated code throughout the file.
@@ -175,10 +196,13 @@ def set_payload_from_id(id_: int) -> bool:
             f"{seashell.GREEN}{seashell.BOLD}[+]{seashell.RESET} Using <{seashell.BOLD}{seashell.PAYLOAD.name}{seashell.RESET}>"
         )
     except KeyError:
-        seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} Could not find payload with ID {id_}")
+        seashell.logger.error(
+            f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} Could not find payload with ID {id_}"
+        )
         return False
-    
+
     return True
+
 
 def substitute_payload(payload: seashell.Command, args) -> None:
     """Substitute the given `payload.command` with the values specified in the substitutions map.
@@ -194,37 +218,73 @@ def substitute_payload(payload: seashell.Command, args) -> None:
         "{ip}": seashell.ADDRESS[0],
         "{port}": str(seashell.ADDRESS[1]),
         "{payload}": args.payload,
-        "{shell}": args.shell
+        "{shell}": args.shell,
     }
 
     for placeholder, value in substitutions.items():
         payload.command = payload.command.replace(placeholder, value)
 
-def handle_payload_output(args) -> None: 
-    """Output the final payload or write to file if specified as a command-line argument
+
+def finalize_payload(payload: seashell.Command, args) -> None:
+    """
+    Finalizes and outputs the payload or writes to file if specified in a command-line argument.
+
+    This function takes a payload command and command-line arguments as input. It first substitutes
+    placeholders in the payload command with actual values based on the provided arguments. Then,
+    if an encoder is selected, it encrypts the payload command using the specified encoder and
+    the given number of iterations.
+
+    Parameters
+    ----------
+    payload : seashell.Command
+        The command instance to modify.
+    args : _type_
+        Parsed command-line arguments containing required information.
+    """
+    substitute_payload(payload, args)
+
+    if seashell.ENCODER:
+        handle_payload_encoding(payload, args.iterations)
+
+
+def handle_payload_output(args) -> None:
+    """
+    Finalize and output the payload or write to file if specified in a command-line argument
 
     Parameters
     ----------
     args : _type_
         Parsed command-line arguments
     """
-    substitute_payload(seashell.PAYLOAD, args)
-    if seashell.ENCODER:
-        handle_payload_encryption(seashell.PAYLOAD)
+    finalize_payload(seashell.PAYLOAD, args)
 
     if args.output:
-        try:
-            with open(args.output, "w") as fd:
-                fd.write(seashell.PAYLOAD.command)
-                seashell.logger.info(f"{seashell.GREEN}{seashell.BOLD}[+]{seashell.RESET} Wrote payload to <{seashell.BOLD}{args.output}{seashell.RESET}>")
-        except OSError as e:
-            seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} {e}")
-            
+        save_payload_to_file()
     else:
         seashell.logger.info(
-            f"{seashell.GREEN}{seashell.BOLD}[+]{seashell.RESET} {seashell.PAYLOAD.name} | {seashell.BOLD}IP{seashell.RESET}: {seashell.GREEN}{seashell.BOLD}{seashell.ADDRESS[0]}{seashell.RESET} {seashell.BOLD}PORT{seashell.RESET}: {seashell.GREEN}{seashell.BOLD}{seashell.ADDRESS[1]}{seashell.RESET}\n{seashell.PAYLOAD.command}")
+            f"{seashell.GREEN}{seashell.BOLD}[+]{seashell.RESET} {seashell.PAYLOAD.name} | {seashell.BOLD}IP{seashell.RESET}: {seashell.GREEN}{seashell.BOLD}{seashell.ADDRESS[0]}{seashell.RESET} {seashell.BOLD}PORT{seashell.RESET}: {seashell.GREEN}{seashell.BOLD}{seashell.ADDRESS[1]}{seashell.RESET}\n{seashell.PAYLOAD.command}"
+        )
 
-def handle_payload_encryption(payload) -> None:
-    """Applies encoder specified in args.encoder to the set PAYLOAD"""
-    encode_function = encoders.ENCODER_MAP[seashell.ENCODER]
-    payload.command = encode_function(payload.command)
+
+def save_payload_to_file() -> None:
+    """
+    Saves the payload command to a file.
+
+    If `seashell.OUTPUT_PATH` is provided, the payload command is written to that file.
+    If not, the payload command is written to a file named "payload.txt".
+
+    Raises:
+    -------
+    OSError: If there is an error opening or writing to the file.
+    """
+    path = seashell.OUTPUT_PATH if seashell.OUTPUT_PATH else "payload.txt"
+    try:
+        with open(path, "w") as fd:
+            fd.write(seashell.PAYLOAD.command)
+    except OSError as e:
+        seashell.logger.error(f"{seashell.RED}{seashell.BOLD}[!]{seashell.RESET} {e}")
+
+
+def handle_payload_encoding(payload: seashell.Command, iterations: int) -> None:
+    """Encodes given data using the selected encoder with the given iterations"""
+    payload.command = encoders.ENCODER_MAP[seashell.ENCODER]().encode(payload.command.encode(), iterations).decode()
